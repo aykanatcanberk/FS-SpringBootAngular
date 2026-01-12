@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  postgresql:
+    container_name: movie_app_sql
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+      POSTGRES_DB: movie_app
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+
+networks:
+  movie-net:
+    driver: bridge
+
+volumes:
+  postgres:
