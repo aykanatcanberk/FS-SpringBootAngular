@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ServiceUtils {
 
-    private UserRepository userRepository;
-    private VideoRepository videoRepository;
+    private final UserRepository userRepository;
+    private final VideoRepository videoRepository;
 
     public User getUserByEmail(String email) {
 
