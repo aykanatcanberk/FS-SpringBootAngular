@@ -9,6 +9,7 @@ import { authGuard } from './shared/guards/auth-guard';
 import { A } from '@angular/cdk/keycodes';
 import { adminGuard } from './shared/guards/admin-guard';
 import { ForgotPassword } from './forgot-password/forgot-password';
+import { ResetPassword } from './reset-password/reset-password';
 
 const routes: Routes = [
   { path: '', component: Landing },
@@ -16,6 +17,7 @@ const routes: Routes = [
   { path: 'verify-email', component: VerifyEmail },
   { path: 'login', component: Login },
   { path: 'forgot-password', component: ForgotPassword },
+  { path: 'reset-password', component: ResetPassword },
   { path: 'home', component: Home, canActivate: [authGuard] },
   {
     path: 'admin',
