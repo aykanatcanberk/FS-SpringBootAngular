@@ -38,3 +38,28 @@ export const DIALOG_CONFIG = {
         disableClose: false
     }
 };
+
+export const RATINGS = ['G','PG','PG-13','R','NC-17'];
+
+export const VIDEO_CATEGORIES = [
+  'Action',
+  'Drama',
+  'Comedy',
+  'Sci-Fi',
+  'Thriller',
+  'Documentary',
+  'Horror',
+  'Romance',
+  'Adventure',
+  'Fantasy',
+  'Animation',
+  'Crime',
+  'Mystery',
+  'Biography',
+  'History',
+  'War',
+  'Western',
+  'Musical',
+  'Sport',
+  'Family'
+];
