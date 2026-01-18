@@ -1,15 +1,170 @@
 <div class="video-list-container">
+
     <div class="header-section">
         <div class="title-wrapper">
             <h1 class="page-title">Video Library</h1>
-            <p class="page-subtitle">Manage and organize your video content</p>
+            <p class="page-subtitle">Manage and organize your video content catalog</p>
         </div>
 
         <div class="header-actions">
-            <button mat-raised-button color="accent" (click)="createNew()" class="upload-btn">
+            <button mat-raised-button color="accent" class="create-btn" (click)="createNew()">
                 <mat-icon>add_circle</mat-icon>
                 Upload New Video
             </button>
+            <button mat-icon-button class="refresh-btn" (click)="load()" [disabled]="loading" matTooltip="Refresh List">
+                <mat-icon [class.spin]="loading">refresh</mat-icon>
+            </button>
         </div>
     </div>
+
+    <div class="stats-row" *ngIf="!loading && pagedVideos?.length > 0">
+        <div class="stat-card">
+            <mat-icon>video_library</mat-icon>
+            <div class="stat-content">
+                <span class="stat-value">{{ totalVideos }}</span>
+                <span class="stat-label">Total Videos</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <mat-icon>public</mat-icon>
+            <div class="stat-content">
+                <span class="stat-value">{{ getPublishedCount() }}</span>
+                <span class="stat-label">Published</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <mat-icon>schedule</mat-icon>
+            <div class="stat-content">
+                <span class="stat-value">{{ getTotalDuration() }}</span>
+                <span class="stat-label">Total Duration</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <div class="search-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input type="text" class="search-input" placeholder="Search by title, description or genre..."
+                [(ngModel)]="searchQuery" (input)="onSearchChange($event)">
+
+            <button mat-icon-button class="clear-btn" *ngIf="searchQuery" (click)="clearSearch()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <div class="search-info" *ngIf="!loading">
+            Showing {{ pagedVideos?.length || 0 }} of {{ totalElements }} Videos
+        </div>
+    </div>
+
+    <mat-progress-bar *ngIf="loading" mode="indeterminate" class="loading-bar"></mat-progress-bar>
+
+    <div class="video-grid" *ngIf="!loading && pagedVideos?.length > 0">
+
+        <div class="video-card" *ngFor="let video of pagedVideos">
+            <div class="card-thumbnail">
+                <img [src]="getPosterUrl(video)" alt="{{ video.title }}" class="thumbnail-img" loading="lazy">
+
+                <div class="thumbnail-overlay">
+                    <mat-icon class="play-icon">play_circle_outline</mat-icon>
+                </div>
+
+                <span class="status-badge" [ngClass]="video.published ? 'published' : 'draft'">
+                    {{ video.published ? 'Published' : 'Draft' }}
+                </span>
+
+                <span class="duration-badge">
+                    {{ formatDuration(video.duration) }}
+                </span>
+            </div>
+
+            <div class="card-content">
+                <h3 class="card-title" (click)="edit(video)" matTooltip="{{ video.title }}">
+                    {{ video.title }}
+                </h3>
+
+                <p class="card-description">
+                    {{ video.description || 'No description available.' }}
+                </p>
+
+                <div class="card-meta">
+                    <div class="meta-item" *ngIf="video.year">
+                        <mat-icon>calendar_today</mat-icon>
+                        <span>{{ video.year }}</span>
+                    </div>
+                    <div class="meta-item" *ngIf="video.rating">
+                        <mat-icon>star</mat-icon>
+                        <span>{{ video.rating }}</span>
+                    </div>
+                </div>
+
+                <div class="card-tags" *ngIf="video.categories && video.categories?.length > 0">
+                    <span class="tag" *ngFor="let cat of video.categories.slice(0, 3)">
+                        {{ cat }}
+                    </span>
+                    <span class="tag" *ngIf="video.categories?.length > 3">
+                        +{{ video.categories.length - 3 }}
+                    </span>
+                </div>
+
+                <div class="card-actions">
+                    <button mat-button class="action-btn" (click)="edit(video)">
+                        <mat-icon>edit</mat-icon>
+                        <span>Edit</span>
+                    </button>
+
+                    <button mat-button class="action-btn danger" (click)="remove(video)">
+                        <mat-icon>delete</mat-icon>
+                        <span>Delete</span>
+                    </button>
+
+                    <div class="publish-toggle" (click)="$event.stopPropagation()">
+                        <mat-slide-toggle color="primary" [checked]="video.published"
+                            (change)="togglePublish($event, video)"
+                            [matTooltip]="video.published ? 'Unpublish Video' : 'Publish Video'">
+                        </mat-slide-toggle>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && pagedVideos?.length === 0 && !searchQuery">
+        <mat-icon class="empty-icon">video_library</mat-icon>
+        <h2>No videos yet</h2>
+        <p>Start building your video library by uploading your first video.</p>
+        <button mat-raised-button color="primary" class="create-btn" (click)="createNew()">
+            <mat-icon>add_circle</mat-icon>
+            Upload Video
+        </button>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && pagedVideos?.length === 0 && searchQuery">
+        <mat-icon class="empty-icon">search_off</mat-icon>
+        <h2>No Result Found</h2>
+        <p>No videos match "{{ searchQuery }}". Try different keywords.</p>
+        <button mat-raised-button color="primary" (click)="clearSearch()">
+            <mat-icon>clear</mat-icon>
+            Clear Search
+        </button>
+    </div>
+
+    <div class="load-more-container" *ngIf="pagedVideos?.length > 0">
+
+        <div class="loading-more" *ngIf="loadingMore">
+            <mat-spinner diameter="32"></mat-spinner>
+            <p>Loading more videos...</p>
+        </div>
+
+        <div class="end-of-content" *ngIf="!hasMoreVideos && !loadingMore">
+            <mat-icon>check_circle</mat-icon>
+            <div style="text-align: center;">
+                <p>You've reached the end of the list</p>
+                <span class="total-loaded">Total {{ totalElements }} videos loaded</span>
+            </div>
+        </div>
+    </div>
+
 </div>
