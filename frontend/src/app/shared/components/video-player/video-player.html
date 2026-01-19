@@ -1,1 +1,120 @@
-<p>video-player works!</p>
+<div class="player-container" (mousemove)="onMouseMove()">
+
+    <button mat-icon-button class="close-btn" (click)="closePlayer()">
+        <mat-icon>close</mat-icon>
+    </button>
+
+    <video #videoPlayer [src]="videoSrc" (loadedmetadata)="onLoadedMetadata()" (timeupdate)="onTimeUpdate()"
+        (click)="onVideoClick()" (play)="isPlaying = true" (pause)="isPlaying = false" (ended)="isPlaying = false"
+        preload="metadata" playsinline class="video-element">
+    </video>
+
+    <div class="loading-spinner" *ngIf="duration === 0">
+        <mat-spinner diameter="60" color="accent"></mat-spinner>
+    </div>
+
+    <div class="player-overlay" [class.hidden]="!showControls">
+
+        <div class="top-bar">
+            <div class="video-info">
+                <h2 class="video-title">{{ video.title }}</h2>
+                <div class="video-meta">
+                    <span *ngIf="video.year">{{ video.year }}</span>
+                    <span *ngIf="video.rating" class="rating-badge">{{ video.rating }}</span>
+                    <span *ngIf="video.duration">{{ formatTime(video.duration) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="center-play" *ngIf="!isPlaying" (click)="togglePlay()">
+            <mat-icon>play_circle_outline</mat-icon>
+        </div>
+
+        <div class="keyboard-hint" *ngIf="showControls && !isPlaying">
+            <div class="hint-title">Keyboard Shortcuts</div>
+            <div class="hint-grid">
+                <span>Space/K</span><span>Play/Pause</span>
+                <span>←/→</span><span>Seek 10s</span>
+                <span>↑/↓</span><span>Volume</span>
+                <span>M</span><span>Mute</span>
+                <span>F</span><span>Fullscreen</span>
+                <span>Esc</span><span>Exit</span>
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+
+            <div class="progress-container" (click)="onProgressClick($event)">
+                <div class="progress-bar">
+                    <div class="progress-filled" [style.width.%]="progressPercent"></div>
+                </div>
+            </div>
+
+            <div class="controls-row">
+
+                <div class="controls-left">
+                    <button mat-icon-button class="control-btn" (click)="togglePlay()">
+                        <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+                    </button>
+
+                    <button mat-icon-button class="control-btn" (click)="seekBackward()">
+                        <mat-icon>replay_10</mat-icon>
+                    </button>
+
+                    <button mat-icon-button class="control-btn" (click)="seekForward()">
+                        <mat-icon>forward_10</mat-icon>
+                    </button>
+
+                    <div class="volume-control">
+                        <button mat-icon-button class="control-btn" (click)="toggleMute()">
+                            <mat-icon>{{ (isMuted || volume === 0) ? 'volume_off' : (volume < 0.5 ? 'volume_down'
+                                    : 'volume_up' ) }}</mat-icon>
+                        </button>
+
+                        <input type="range" class="volume-slider" min="0" max="1" step="0.01" [value]="volume"
+                            [style.--volume-percent]="volumePercent + '%'" (input)="changeVolume($event)">
+                    </div>
+
+                    <span class="time-display">
+                        {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+                    </span>
+                </div>
+
+                <div class="controls-right">
+
+                    <button mat-button class="speed-btn" [matMenuTriggerFor]="speedMenu">
+                        {{ playbackRate }}x
+                    </button>
+
+                    <button mat-icon-button class="control-btn" [matMenuTriggerFor]="qualityMenu" matTooltip="Settings">
+                        <mat-icon>settings</mat-icon>
+                    </button>
+
+                    <button mat-icon-button class="control-btn" (click)="toggleFullscreen()">
+                        <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+                    </button>
+
+                    <mat-menu #speedMenu="matMenu" yPosition="above">
+                        <button mat-menu-item *ngFor="let rate of availablePlaybackRates"
+                            (click)="setPlaybackSpeed(rate)">
+                            <mat-icon *ngIf="playbackRate === rate" class="check-icon">check</mat-icon>
+                            <span [class.indent]="playbackRate !== rate">{{ rate }}x</span>
+                        </button>
+                    </mat-menu>
+
+                    <mat-menu #qualityMenu="matMenu" yPosition="above">
+                        <div class="menu-header">Quality</div>
+                        <button mat-menu-item *ngFor="let res of resolutions" (click)="setQuality(res)">
+                            <mat-icon *ngIf="currentQuality === res.label" class="check-icon">check</mat-icon>
+                            <span [class.indent]="currentQuality !== res.label">{{ res.label }}</span>
+                            <span class="hd-badge" *ngIf="res.label === '1080p'">HD</span>
+                        </button>
+                    </mat-menu>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>

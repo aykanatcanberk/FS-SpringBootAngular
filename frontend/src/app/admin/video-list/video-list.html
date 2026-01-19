@@ -64,7 +64,8 @@
     <div class="video-grid" *ngIf="!loading && pagedVideos?.length > 0">
 
         <div class="video-card" *ngFor="let video of pagedVideos">
-            <div class="card-thumbnail">
+            <div class="card-thumbnail" (click)="play(video)">
+
                 <img [src]="getPosterUrl(video)" alt="{{ video.title }}" class="thumbnail-img" loading="lazy">
 
                 <div class="thumbnail-overlay">
