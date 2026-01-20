@@ -1,0 +1,161 @@
+<div class="user-management-container">
+
+    <div class="header-section">
+      <div class="title-wrapper">
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Manage system access, roles, and user statuses</p>
+      </div>
+  
+      <div class="header-actions">
+        <button mat-raised-button color="primary" class="create-btn" (click)="createUser()">
+          <mat-icon>person_add</mat-icon>
+          Create New User
+        </button>
+        <button mat-icon-button class="refresh-btn" (click)="loadUsers()" [disabled]="loading" matTooltip="Refresh List">
+          <mat-icon [class.spin]="loading">refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  
+    <div class="search-section">
+      <div class="search-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text" 
+               class="search-input" 
+               placeholder="Search by name, email or ID..."
+               [value]="searchQuery" 
+               (input)="onSearchChange($event)">
+  
+        <button mat-icon-button class="clear-btn" *ngIf="searchQuery" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+  
+      <div class="search-info" *ngIf="!loading">
+        Showing {{ (paginatedUsers?.length || 0) }} of {{ totalUsers }} Users
+      </div>
+    </div>
+  
+    <mat-progress-bar *ngIf="loading && currentPage === 0" mode="indeterminate" class="loading-bar"></mat-progress-bar>
+  
+    <div class="error-container" *ngIf="error">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2>Connection Error</h2>
+      <p>Failed to load user data. Please check your internet connection.</p>
+      <button mat-raised-button color="accent" (click)="loadUsers()">Try Again</button>
+    </div>
+  
+    <div class="users-grid" *ngIf="!error && (paginatedUsers?.length || 0) > 0">
+      
+      <div class="user-card" *ngFor="let user of paginatedUsers" [class.current-user]="isCurrentUser(user)">
+        
+        <div class="user-card-header">
+          <div class="user-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="user-info">
+            <h3 class="user-name">
+              {{ user.fullName || 'Unknown User' }}
+              <span class="you-badge" *ngIf="isCurrentUser(user)">YOU</span>
+            </h3>
+            <p class="user-email" [matTooltip]="user.email">{{ user.email }}</p>
+          </div>
+        </div>
+  
+        <div class="user-card-body">
+          <div class="user-meta">
+            <div class="meta-item">
+              <span class="meta-label">Role</span>
+              <span [class]="getRoleBadgeClass(user.role)">
+                <mat-icon class="badge-icon">
+                  {{ user.role === 'ADMIN' ? 'admin_panel_settings' : 'person' }}
+                </mat-icon>
+                {{ user.role }}
+              </span>
+            </div>
+  
+            <div class="meta-item">
+              <span class="meta-label">Status</span>
+              <span [class]="getStatusBadgeClass(user.active)">
+                <mat-icon class="badge-icon">
+                  {{ user.active ? 'check_circle' : 'block' }}
+                </mat-icon>
+                {{ user.active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+  
+          <div class="user-details">
+            <div class="detail-item">
+              <mat-icon class="detail-icon">calendar_today</mat-icon>
+              <span>Joined {{ formatDate(user.createdAt) }}</span>
+            </div>
+            <div class="detail-item">
+              <mat-icon class="detail-icon">fingerprint</mat-icon>
+              <span>ID: {{ user.id }}</span>
+            </div>
+          </div>
+        </div>
+  
+        <div class="user-card-actions">
+          <button mat-button class="action-button" (click)="editUser(user)">
+            <mat-icon>edit</mat-icon> Edit
+          </button>
+  
+          <button mat-button class="action-button" 
+                  (click)="changeUserRole(user)"
+                  [class.disabled]="isCurrentUser(user)"
+                  [matTooltip]="isCurrentUser(user) ? 'You cannot change your own role' : 'Change Role'">
+            <mat-icon>swap_horiz</mat-icon> Role
+          </button>
+  
+          <button mat-button class="action-button" 
+                  (click)="toggleUserStatus(user)"
+                  [class.disabled]="isCurrentUser(user)"
+                  [matTooltip]="isCurrentUser(user) ? 'You cannot disable yourself' : (user.active ? 'Disable User' : 'Activate User')">
+            <mat-icon>{{ user.active ? 'block' : 'check_circle_outline' }}</mat-icon>
+            {{ user.active ? 'Disable' : 'Enable' }}
+          </button>
+  
+          <button mat-button class="action-button delete-action" 
+                  (click)="deleteUser(user)"
+                  [class.disabled]="isCurrentUser(user)"
+                  [matTooltip]="isCurrentUser(user) ? 'You cannot delete yourself' : 'Delete User permanently'">
+            <mat-icon>delete_outline</mat-icon> Delete
+          </button>
+        </div>
+  
+      </div>
+    </div>
+  
+    <div class="empty-state" *ngIf="!loading && (paginatedUsers?.length || 0) === 0 && !error">
+      <div class="empty-icon-wrapper">
+        <mat-icon class="empty-icon">group_off</mat-icon>
+      </div>
+      <h2>No Users Found</h2>
+      <p *ngIf="searchQuery">No results matching "{{ searchQuery }}". Try different keywords.</p>
+      <p *ngIf="!searchQuery">Your user database is empty. Start by creating a new user.</p>
+      
+      <button mat-raised-button color="primary" class="create-btn" 
+              (click)="searchQuery ? clearSearch() : createUser()">
+        <mat-icon>{{ searchQuery ? 'clear' : 'add_circle' }}</mat-icon>
+        {{ searchQuery ? 'Clear Search' : 'Create User' }}
+      </button>
+    </div>
+  
+    <div class="load-more-container" *ngIf="(paginatedUsers?.length || 0) > 0 && !error">
+      
+      <div class="loading-more" *ngIf="loadingMore">
+        <mat-spinner diameter="32" color="primary"></mat-spinner>
+        <p>Loading more users...</p>
+      </div>
+  
+      <div class="end-of-content" *ngIf="!hasMoreUsers && !loadingMore">
+        <mat-icon>check_circle_outline</mat-icon>
+        <p>You've reached the end of the list</p>
+        <span class="total-loaded">Total {{ totalUsers }} users loaded</span>
+      </div>
+  
+    </div>
+  
+  </div>
