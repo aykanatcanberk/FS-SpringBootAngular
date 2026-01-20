@@ -1,3 +1,140 @@
 <div class="dashboard-container">
     <app-header [showRouterOutlet]="false"></app-header>
+
+    <div class="banner-loading" *ngIf="featuredLoading">
+        <mat-spinner diameter="50" color="accent"></mat-spinner>
+    </div>
+
+    <div class="banner-slider" *ngIf="!featuredLoading && (featuredVideos?.length || 0) > 0">
+
+        <div class="slider-nav prev" (click)="prevSlide()">
+            <mat-icon>chevron_left</mat-icon>
+        </div>
+        <div class="slider-nav next" (click)="nextSlide()">
+            <mat-icon>chevron_right</mat-icon>
+        </div>
+
+        <div class="slider-container">
+            <div class="slides">
+                <div class="slide" *ngFor="let video of featuredVideos; let i = index"
+                    [class.active]="i === currentSlideIndex">
+
+                    <img [src]="getPosterUrl(video)" [alt]="video.title" class="banner-bg">
+                    <div class="banner-overlay"></div>
+
+                    <div class="banner-content">
+                        <h1 class="banner-title">{{ video.title }}</h1>
+                        <p class="banner-description">{{ video.description }}</p>
+
+                        <div class="banner-actions">
+                            <button class="play-btn" (click)="playVideo(video)">
+                                <mat-icon>play_arrow</mat-icon> Play
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slider-indicators">
+            <button class="indicator" *ngFor="let video of featuredVideos; let i = index"
+                [class.active]="i === currentSlideIndex" (click)="goToSlide(i)">
+            </button>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <div class="search-container">
+            <mat-form-field class="search-input" appearance="outline">
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput placeholder="Search titles, genres, or people" [(ngModel)]="searchQuery"
+                    (keyup)="onSearch()">
+                <button mat-icon-button matSuffix *ngIf="searchQuery" (click)="clearSearch()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </mat-form-field>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="video-section">
+
+            <h2 class="section-title">
+                {{ searchQuery ? 'Search Results' : 'All Videos' }}
+            </h2>
+
+            <mat-progress-bar *ngIf="loading && currentPage === 0" mode="indeterminate" class="loading-bar">
+            </mat-progress-bar>
+
+            <div class="error-container" *ngIf="error">
+                <mat-icon class="error-icon">error_outline</mat-icon>
+                <p>Something went wrong while loading videos.</p>
+                <button mat-raised-button color="warn" (click)="loadVideos()">Try Again</button>
+            </div>
+
+            <div class="video-grid" *ngIf="!error && (allvideos?.length || 0) > 0">
+
+                <div class="video-card" *ngFor="let video of allvideos" (click)="playVideo(video)">
+
+                    <div class="card-thumbnail">
+                        <img [src]="getPosterUrl(video)" class="thumbnail-img" loading="lazy">
+                        <div class="thumbnail-overlay">
+                            <mat-icon class="play-icon">play_circle_outline</mat-icon>
+                        </div>
+                        <span class="duration-badge">{{ formatDuration(video.duration) }}</span>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="card-title" [matTooltip]="video.title">{{ video.title }}</h3>
+
+                            <button class="watch-later-icon" [class.active]="isInWatchlist(video)"
+                                (click)="toggleWatchlist(video, $event)" matTooltip="Add to Favorites">
+                                <mat-icon>{{ isInWatchlist(video) ? 'favorite' : 'favorite_border' }}</mat-icon>
+                            </button>
+                        </div>
+
+                        <p class="card-description">{{ video.description }}</p>
+
+                        <div class="card-meta">
+                            <span class="meta-item">
+                                <mat-icon>calendar_today</mat-icon> {{ video.year }}
+                            </span>
+                            <span class="meta-item" *ngIf="video.rating">
+                                <mat-icon>star</mat-icon> {{ video.rating }}
+                            </span>
+                            <span class="meta-item" *ngIf="video.views">
+                                {{ video.views | number }} views
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="empty-state" *ngIf="!loading && (allvideos?.length || 0) === 0 && !error">
+                <mat-icon class="empty-icon">search_off</mat-icon>
+                <h2>No Videos Found</h2>
+                <p *ngIf="searchQuery">We couldn't find any matches for "{{ searchQuery }}".</p>
+                <p *ngIf="!searchQuery">No videos are currently available.</p>
+                <button mat-button color="warn" *ngIf="searchQuery" (click)="clearSearch()">Clear Search</button>
+            </div>
+
+            <div class="load-more-container" *ngIf="(allvideos?.length || 0) > 0 && !error">
+                <div class="loading-more" *ngIf="loadingMore">
+                    <mat-spinner diameter="32" color="warn"></mat-spinner>
+                    <p>Loading more content...</p>
+                </div>
+
+                <div class="end-of-content" *ngIf="!hasMoreVideos && !loadingMore">
+                    <mat-icon>check_circle</mat-icon>
+                    <p>You've reached the end!</p>
+                    <span class="total-loaded">{{ totalElements }} videos loaded</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </div>

@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { ConfirmDialog } from '../components/confirm-dialog/confirm-dialog';
 import { ManageVideo } from '../../admin/dialog/manage-video/manage-video';
 import { VideoPlayer } from '../components/video-player/video-player';
+import { ManageUser } from '../../admin/dialog/manage-video/manage-user/manage-user';
 
 @Injectable({
   providedIn: 'root',
@@ -52,4 +53,11 @@ export class DiaolagService {
       ...DIALOG_CONFIG.VIDEO_PLAYER
     });
   }
+
+  openManageUserDialog(mode: 'create' | 'edit', user?: any): MatDialogRef<ManageUser> {
+  return this.dialog.open(ManageUser, {
+    ...DIALOG_CONFIG.MANAGE_USER,
+    data: { mode, user }
+  })
+}
 }
