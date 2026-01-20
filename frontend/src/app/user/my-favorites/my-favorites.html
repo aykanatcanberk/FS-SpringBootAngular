@@ -1,0 +1,92 @@
+<div class="my-favorites-container">
+    <app-header [showRouterOutlet]="false"></app-header>
+    <div class="search-section">
+        <div class="search-container">
+            <mat-form-field class="search-input" appearance="outline">
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput placeholder="Search in your favorites..." [(ngModel)]="searchQuery"
+                    (keyup)="onSearch()">
+                <button mat-icon-button matSuffix *ngIf="searchQuery" (click)="clearSearch()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </mat-form-field>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="video-section">
+
+            <h2 class="section-title">
+                {{ searchQuery ? 'Search Results' : 'My Watchlist' }}
+                <span *ngIf="totalElements > 0" style="opacity: 0.6; font-size: 0.8em; margin-left: 10px;">
+                    ({{ totalElements }})
+                </span>
+            </h2>
+
+            <mat-progress-bar *ngIf="loading && currentPage === 0" mode="indeterminate" class="loading-bar">
+            </mat-progress-bar>
+
+            <div class="error-container" *ngIf="error">
+                <mat-icon class="error-icon">error_outline</mat-icon>
+                <p>Could not load your favorites.</p>
+                <button mat-raised-button color="warn" (click)="loadWatchlist()">Try Again</button>
+            </div>
+
+            <div class="video-grid" *ngIf="!error && (videos?.length || 0) > 0">
+                <div class="video-card" *ngFor="let video of videos" (click)="playVideo(video)">
+
+                    <div class="card-thumbnail">
+                        <img [src]="getPosterUrl(video)" class="thumbnail-img" loading="lazy">
+                        <div class="thumbnail-overlay">
+                            <mat-icon class="play-icon">play_circle_outline</mat-icon>
+                        </div>
+                        <span class="duration-badge">{{ formatDuration(video.duration) }}</span>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="card-title" [matTooltip]="video.title">{{ video.title }}</h3>
+
+                            <button class="remove-icon" (click)="removeFromWatchlist(video, $event)"
+                                matTooltip="Remove from Favorites">
+                                <mat-icon>remove_circle_outline</mat-icon>
+                            </button>
+                        </div>
+
+                        <p class="card-description">{{ video.description }}</p>
+
+                        <div class="card-meta">
+                            <span class="meta-item">
+                                <mat-icon>calendar_today</mat-icon> {{ video.year }}
+                            </span>
+                            <span class="meta-item" *ngIf="video.rating">
+                                <mat-icon>star</mat-icon> {{ video.rating }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state" *ngIf="!loading && (videos?.length || 0) === 0 && !error">
+                <mat-icon class="empty-icon">favorite_border</mat-icon>
+                <h2>No Favorites Yet</h2>
+                <p *ngIf="searchQuery">No videos found matching "{{ searchQuery }}" in your list.</p>
+                <p *ngIf="!searchQuery">Start building your collection by adding videos you love!</p>
+                <button mat-button color="warn" *ngIf="searchQuery" (click)="clearSearch()">Clear Search</button>
+            </div>
+
+            <div class="load-more-container" *ngIf="(videos?.length || 0) > 0 && !error">
+                <div class="loading-more" *ngIf="loadingMore">
+                    <mat-spinner diameter="32" color="warn"></mat-spinner>
+                    <p>Loading more favorites...</p>
+                </div>
+
+                <div class="end-of-content" *ngIf="!hasMoreVideos && !loadingMore">
+                    <mat-icon>check_circle</mat-icon>
+                    <p>You've seen all your favorites</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

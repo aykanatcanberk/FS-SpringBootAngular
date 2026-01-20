@@ -43,7 +43,7 @@ export class VideoService {
     return this.http.get(`${this.apiUrlAdmin}/stats`);
   }
 
-  getPublishedVideoPaginated(page: number = 0, size: number = 10, search?: string) {
+  getPublishedVideoPaginated(page: number = 0, size: number = 10, search?: string, category?: string | undefined) {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search) params = params.set('search', search);
     return this.http.get(`${this.apiUrl}/published`, { params });
